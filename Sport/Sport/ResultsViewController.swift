@@ -144,7 +144,7 @@ final class ResultsViewController: UIViewController {
         getDataFirebase()
     }
     
-    func getCoreData() {
+    private func getCoreData() {
         do {
             modelsCoreData = try context.fetch(SportEntity.fetchRequest())
             DispatchQueue.main.async {
@@ -250,22 +250,22 @@ extension ResultsViewController : UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // Configure the cell...
-        var cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: "", place: "", time: "")
+        var cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: "", place: "", time: "", type: "None")
         switch counter {
         case 0:
             if indexPath.row < self.modelsFirebase.count {
                 let model = modelsFirebase[indexPath.row]
-                cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: model.name, place: model.place, time: model.time)
+                cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: model.name, place: model.place, time: model.time, type: "Firebase")
                 return cell
             }
             let model = modelsCoreData[indexPath.row - self.modelsFirebase.count]
-            cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: model.name ?? "", place: model.place ?? "", time: model.time ?? "")
+            cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: model.name ?? "", place: model.place ?? "", time: model.time ?? "", type: "Core Data")
         case 1:
             let model = modelsCoreData[indexPath.row]
-            cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: model.name ?? "", place: model.place ?? "", time: model.time ?? "")
+            cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: model.name ?? "", place: model.place ?? "", time: model.time ?? "", type: "Core Data")
         case 2:
             let model = modelsFirebase[indexPath.row]
-            cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: model.name, place: model.place, time: model.time)
+            cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: model.name, place: model.place, time: model.time, type: "Firebase")
         default:
             print("How it posible?")
         }

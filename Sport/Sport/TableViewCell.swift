@@ -9,7 +9,7 @@ import UIKit
 
 final class TableViewCell: UITableViewCell {
 
-    init(style: UITableViewCell.CellStyle, reuseIdentifier: String?, indexPath: IndexPath, accessoryType: UITableViewCell.AccessoryType, name: String, place: String, time: String) { //,data: model
+    init(style: UITableViewCell.CellStyle, reuseIdentifier: String?, indexPath: IndexPath, accessoryType: UITableViewCell.AccessoryType, name: String, place: String, time: String, type: String) { //,data: model
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         self.accessoryType = accessoryType
@@ -44,7 +44,13 @@ final class TableViewCell: UITableViewCell {
         let backgroundView = UIView()
         backgroundView.backgroundColor = UIColor(red: 0.954, green: 1, blue: 0.956, alpha: 1)
         selectedBackgroundView = backgroundView
-
+        
+        if type == "Core Data" {
+            backgroundColor = UIColor(red: 0, green: 0.721, blue: 0.029, alpha: 0.1)
+        } else {
+            backgroundColor = UIColor(red: 0.721, green: 0.029, blue: 0, alpha: 0.1)
+        }
+        
         stackViewCell.axis = .horizontal
         stackViewCell.alignment = .center
         stackViewCell.translatesAutoresizingMaskIntoConstraints = false
