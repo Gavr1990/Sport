@@ -56,32 +56,13 @@ final class ResultsViewController: UIViewController {
         label.backgroundColor = .white
         return label
     }()
-    // MARK: - Initializers
-//    init(emailUser: String, data: Company) {
-//        super.init(nibName: nil, bundle: nil)
-//        self.data = data
-//        typeOfShowVC = false
-//        for i in 0...data.users.count - 1 {
-//            if data.users[i].info.email == emailUser {
-//                labelQuantityHoursWeek.text = "\(data.users[i].work.weekHours!)"
-//                labelQuantityAllOfHours.text = "\(data.users[i].work.totalHours!)"
-//                labelQuantityHoursMonth.text = "\(data.users[i].work.monthHours!)"
-//                labelOfProfileButton.text = "\(data.users[i].info.name!) \(data.users[i].info.surname!)"
-//                myId = i
-//                countOfDays = data.users[i].days.count
-//            }
-//        }
-//    }
-//    
-//    required init?(coder: NSCoder) {
-//        super.init(coder: coder)
-//    }
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         installOutlets()
+        getAllItems()
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -101,7 +82,7 @@ final class ResultsViewController: UIViewController {
     }
     
     override func viewDidLayoutSubviews() {
-        getAllItems()
+        getCoreData()
     }
     
     // MARK: - Private Methods
@@ -134,6 +115,7 @@ final class ResultsViewController: UIViewController {
         narrowConstraints = [
             buttonOfChangingTable.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             buttonOfChangingTable.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            
             tableOfAchivments.topAnchor.constraint(equalTo: buttonOfChangingTable.bottomAnchor),
             tableOfAchivments.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableOfAchivments.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -142,6 +124,7 @@ final class ResultsViewController: UIViewController {
         wideConstraints = [
             buttonOfChangingTable.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             buttonOfChangingTable.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            
             tableOfAchivments.topAnchor.constraint(equalTo: buttonOfChangingTable.bottomAnchor),
             tableOfAchivments.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableOfAchivments.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -157,9 +140,13 @@ final class ResultsViewController: UIViewController {
     }
     
     private func getAllItems() {
+        getCoreData()
+        getDataFirebase()
+    }
+    
+    func getCoreData() {
         do {
             modelsCoreData = try context.fetch(SportEntity.fetchRequest())
-            getDataFirebase()
             DispatchQueue.main.async {
                 self.tableOfAchivments.reloadData()
             }
@@ -167,39 +154,31 @@ final class ResultsViewController: UIViewController {
         catch let error {
             print(error)
         }
+
     }
     
     private func getDataFirebase() {
         ref = Database.database().reference()
 
-        self.ref.getData(completion:  { [weak self] error, snapshot in
-            guard error == nil else {
-                print(error!.localizedDescription)
-                return
-            }
+        ref.child("LSbJXig4YbOP6ET9wbCekBFeOJd2").observeSingleEvent(of: .value, with: { snap in
+
             guard
-                let self = self,
-                var json = snapshot.value as? [String: Any]
+                let json = snap.value as? [String: Any]
             else {
                 return
             }
-//            json["LSbJXig4YbOP6ET9wbCekBFeOJd2"] = snapshot.key
-            json["isDataFromFirebase"] = snapshot.key
-            json["name"] = snapshot.key
-            json["place"] = snapshot.key
-            json["time"] = snapshot.key
-                        
+            print(json)
+
             do {
                 let jsonData = try JSONSerialization.data(withJSONObject: json, options: [])
                 let groceryItem = try JSONDecoder().decode(Sport.self, from: jsonData)
                 self.modelsFirebase.append(groceryItem)
-//                print(groceryItem)
+                print(groceryItem)
             } catch let error {
               print("an error occurred", error)
             }
 
         })
-
     }
 
     
@@ -256,8 +235,17 @@ extension ResultsViewController : UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return modelsCoreData.count
-        // MARK: Add Firebase
+        switch counter {
+            case 0:
+                return modelsCoreData.count + modelsFirebase.count
+            case 1:
+                return modelsCoreData.count
+            case 2:
+                return modelsFirebase.count
+            default:
+                print("How it posible?")
+        }
+        return 1
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -265,7 +253,12 @@ extension ResultsViewController : UITableViewDataSource {
         var cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: "", place: "", time: "")
         switch counter {
         case 0:
-            let model = modelsCoreData[indexPath.row]
+            if indexPath.row < self.modelsFirebase.count {
+                let model = modelsFirebase[indexPath.row]
+                cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: model.name, place: model.place, time: model.time)
+                return cell
+            }
+            let model = modelsCoreData[indexPath.row - self.modelsFirebase.count]
             cell = TableViewCell(style: .default, reuseIdentifier: "MyCell", indexPath: indexPath, accessoryType: .none, name: model.name ?? "", place: model.place ?? "", time: model.time ?? "")
         case 1:
             let model = modelsCoreData[indexPath.row]
@@ -279,12 +272,6 @@ extension ResultsViewController : UITableViewDataSource {
         return cell
     }
     
-//    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-//        let cell = tableView.dequeueReusableCell(withIdentifier: "MyCell", for: indexPath)
-//
-//        return cell
-//    }
-
     // Override to support conditional editing of the table view.
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         // Return false if you do not want the specified item to be editable.
